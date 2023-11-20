@@ -15,6 +15,7 @@ uvicorn = "^0.24.0.post1"
 [tool.poetry.group.dev.dependencies]
 devtools = "^0.12.2"
 pytest = "^7.4.3"
+requests = "^2.31.0"
 
 [build-system]
 requires = ["poetry-core"]
