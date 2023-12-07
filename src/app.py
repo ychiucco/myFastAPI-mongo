@@ -5,11 +5,10 @@ from typing import Optional
 from bson import ObjectId
 from fastapi import FastAPI
 from fastapi import Response
-from motor import motor_asyncio
-from pydantic import BaseConfig
 from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import Field
-
+from pymongo import MongoClient
 
 # FastAPI
 
@@ -21,10 +20,7 @@ app = FastAPI(
 
 # DB connection
 
-
-client = motor_asyncio.AsyncIOMotorClient(
-    "mongodb://root:password@localhost/?authSource=admin"
-)
+client = MongoClient("mongodb://127.0.0.1:27017")
 nffa_db = client["nffa"]
 user_collection = nffa_db["user"]
 
@@ -33,13 +29,15 @@ user_collection = nffa_db["user"]
 
 
 class MongoModel(BaseModel):
-    class Config(BaseConfig):
-        arbitrary_types_allowed = True
-        allow_population_by_field_name = True
-        json_encoders = {
+
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        allow_population_by_field_name=True,
+        json_encoders={
             datetime: lambda dt: dt.isoformat(),
             ObjectId: lambda oid: str(oid),
-        }
+        },
+    )
 
 
 class UserBase(MongoModel):
@@ -72,13 +70,13 @@ async def create_user(new_user: UserCreate) -> UserRead:
     --data '{"name":"mario","surname":"rossi"}' \
     http://localhost:8000/user/
     """
-    user = await user_collection.insert_one(new_user.dict())
+    user = user_collection.insert_one(new_user.model_dump())
     return await read_user(user.inserted_id)
 
 
 @app.get("/user/{user_id}")
 async def read_user(user_id: str) -> UserRead:
-    return await user_collection.find_one({"_id": ObjectId(user_id)})
+    return user_collection.find_one({"_id": ObjectId(user_id)})
 
 
 @app.get("/user/")
@@ -88,7 +86,7 @@ async def read_user_list() -> List[UserRead]:
     --request GET \
     http://localhost:8000/user/
     """
-    user_list = await user_collection.find().to_list(length=100)
+    user_list = user_collection.find()
     return user_list
 
 
@@ -109,11 +107,14 @@ async def update_user(user_id: str, update: UserUpdate) -> UserRead:
 
 @app.delete("/user/{user_id}")
 async def delete_user(user_id: str) -> Response:
-    await user_collection.delete_one({"_id": ObjectId(user_id)})
+    user_collection.delete_one({"_id": ObjectId(user_id)})
     return Response(status_code=204)
 
 
 @app.delete("/user/")
 async def delete_every_user() -> Response:
-    await user_collection.delete_many(filter={})
+    """
+    curl  --request DELETE http://localhost:8000/user/
+    """
+    user_collection.delete_many(filter={})
     return Response(status_code=204)
