@@ -1,21 +1,18 @@
 [tool.poetry]
 name = "myfastapi-mongo"
 version = "0.1.0"
-description = "Basic setup for projects with FastAPI+MongoDB"
+description = ""
 authors = ["Yuri Chiucconi <yuri.chiucconi@exact-lab.it>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
 fastapi = "^0.104.1"
-pydantic = {extras = ["email"], version = "^2.4.2"}
-motor = "^3.3.1"
-uvicorn = "^0.24.0.post1"
+pymongo = "^4.6.1"
 
 [tool.poetry.group.dev.dependencies]
 devtools = "^0.12.2"
 pytest = "^7.4.3"
-requests = "^2.31.0"
 
 [build-system]
 requires = ["poetry-core"]
